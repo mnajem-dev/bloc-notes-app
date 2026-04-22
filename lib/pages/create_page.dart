@@ -53,7 +53,11 @@ class _CreateNotePageState extends State<CreateNotePage> {
   void _saveNote() {
     if (_titleController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Le titre est obligatoire')),
+        SnackBar(
+          content: const Text('Le titre est obligatoire'),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
       );
       return;
     }
@@ -72,83 +76,118 @@ class _CreateNotePageState extends State<CreateNotePage> {
   }
 
   Widget _buildColorPicker() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: _colors.map((colorHex) {
-        final isSelected = _selectedColor == colorHex;
-        return GestureDetector(
-          onTap: () {
-            setState(() {
-              _selectedColor = colorHex;
-            });
-          },
-          child: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: _getColorFromHex(colorHex),
-              shape: BoxShape.circle,
-              border: isSelected ? Border.all(color: Colors.black, width: 2) : null,
-              boxShadow: const [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 4,
-                  offset: Offset(0, 2),
-                )
-              ],
+    return Container(
+      height: 80,
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: _colors.length,
+        separatorBuilder: (context, index) => const SizedBox(width: 16),
+        itemBuilder: (context, index) {
+          final colorHex = _colors[index];
+          final isSelected = _selectedColor == colorHex;
+          final color = _getColorFromHex(colorHex);
+          
+          return GestureDetector(
+            onTap: () {
+              setState(() {
+                _selectedColor = colorHex;
+              });
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: color,
+                shape: BoxShape.circle,
+                border: isSelected ? Border.all(color: Colors.black87, width: 3) : Border.all(color: Colors.transparent, width: 3),
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withOpacity(0.5),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  )
+                ],
+              ),
+              child: isSelected ? const Icon(Icons.check, color: Colors.black87) : null,
             ),
-          ),
-        );
-      }).toList(),
+          );
+        },
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final isEditing = widget.note != null;
+    final bgColor = _getColorFromHex(_selectedColor);
 
     return Scaffold(
+      backgroundColor: bgColor,
       appBar: AppBar(
-        title: Text(isEditing ? 'Modifier la note' : 'Nouvelle Note'),
-        backgroundColor: _getColorFromHex(_selectedColor),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.check, color: Colors.black87, size: 28),
+            onPressed: _saveNote,
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+      body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextField(
-              controller: _titleController,
-              maxLength: 60,
-              decoration: const InputDecoration(
-                labelText: 'Titre de la note',
-                border: OutlineInputBorder(),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    TextField(
+                      controller: _titleController,
+                      style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                      maxLength: 60,
+                      maxLines: null,
+                      decoration: const InputDecoration(
+                        hintText: 'Titre...',
+                        hintStyle: TextStyle(color: Colors.black38),
+                        border: InputBorder.none,
+                        counterText: '',
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _contentController,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        color: Colors.black87,
+                        height: 1.5,
+                      ),
+                      minLines: 10,
+                      maxLines: null,
+                      decoration: const InputDecoration(
+                        hintText: 'Commencez à écrire...',
+                        hintStyle: TextStyle(color: Colors.black38),
+                        border: InputBorder.none,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _contentController,
-              minLines: 4,
-              maxLines: 10,
-              decoration: const InputDecoration(
-                labelText: 'Contenu...',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'Couleur:',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            _buildColorPicker(),
-            const SizedBox(height: 32),
-            ElevatedButton(
-              onPressed: _saveNote,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-              child: const Text('Sauvegarder'),
+            Container(
+              color: bgColor,
+              child: _buildColorPicker(),
             ),
           ],
         ),

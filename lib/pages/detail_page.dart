@@ -49,6 +49,7 @@ class _DetailNotePageState extends State<DetailNotePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Supprimer la note'),
         content: const Text('Êtes-vous sûr de vouloir supprimer cette note ?'),
         actions: [
@@ -81,6 +82,8 @@ class _DetailNotePageState extends State<DetailNotePage> {
 
   @override
   Widget build(BuildContext context) {
+    final bgColor = _getColorFromHex(_currentNote.couleur);
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, dynamic result) {
@@ -88,51 +91,73 @@ class _DetailNotePageState extends State<DetailNotePage> {
          Navigator.pop(context, _wasModified ? _currentNote : null);
       },
       child: Scaffold(
+        backgroundColor: bgColor,
         appBar: AppBar(
-          backgroundColor: _getColorFromHex(_currentNote.couleur),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+            icon: const Icon(Icons.arrow_back, color: Colors.black87),
             onPressed: () {
               Navigator.pop(context, _wasModified ? _currentNote : null);
             },
           ),
           actions: [
             IconButton(
-              icon: const Icon(Icons.edit),
+              icon: const Icon(Icons.edit_outlined, color: Colors.black87),
               onPressed: _editNote,
             ),
             IconButton(
-              icon: const Icon(Icons.delete),
+              icon: const Icon(Icons.delete_outline, color: Colors.black87),
               onPressed: _deleteNote,
             ),
+            const SizedBox(width: 8),
           ],
         ),
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
+        body: SafeArea(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                _currentNote.titre,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Créée le ${_formatDate(_currentNote.dateCreation)}',
-                style: const TextStyle(
-                  color: Colors.grey,
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(height: 24),
               Expanded(
                 child: SingleChildScrollView(
-                  child: Text(
-                    _currentNote.contenu,
-                    style: const TextStyle(fontSize: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _currentNote.titre,
+                        style: const TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                          height: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          const Icon(Icons.access_time, size: 16, color: Colors.black54),
+                          const SizedBox(width: 6),
+                          Text(
+                            _formatDate(_currentNote.dateCreation),
+                            style: const TextStyle(
+                              color: Colors.black54,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 32),
+                      Text(
+                        _currentNote.contenu,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          color: Colors.black87,
+                          height: 1.6,
+                        ),
+                      ),
+                      const SizedBox(height: 40),
+                    ],
                   ),
                 ),
               ),
