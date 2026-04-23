@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/note.dart';
+import '../services/note_service.dart';
 
 class CreateNotePage extends StatefulWidget {
   final Note? note;
@@ -13,7 +15,7 @@ class CreateNotePage extends StatefulWidget {
 class _CreateNotePageState extends State<CreateNotePage> {
   final _titleController = TextEditingController();
   final _contentController = TextEditingController();
-  
+
   final List<String> _colors = [
     '#FFCDD2', // Red
     '#F8BBD0', // Pink
@@ -22,7 +24,7 @@ class _CreateNotePageState extends State<CreateNotePage> {
     '#FFF9C4', // Yellow
     '#FFE082', // Amber
   ];
-  
+
   String _selectedColor = '#FFCDD2';
 
   @override
@@ -62,9 +64,13 @@ class _CreateNotePageState extends State<CreateNotePage> {
       return;
     }
 
+    final noteService = context.read<NoteService>();
     final isEditing = widget.note != null;
+
     final note = Note(
-      id: isEditing ? widget.note!.id : DateTime.now().millisecondsSinceEpoch.toString(),
+      id: isEditing
+          ? widget.note!.id
+          : DateTime.now().millisecondsSinceEpoch.toString(),
       titre: _titleController.text.trim(),
       contenu: _contentController.text.trim(),
       couleur: _selectedColor,
@@ -72,7 +78,13 @@ class _CreateNotePageState extends State<CreateNotePage> {
       dateModification: isEditing ? DateTime.now() : null,
     );
 
-    Navigator.pop(context, note);
+    if (isEditing) {
+      noteService.updateNote(note);
+    } else {
+      noteService.addNote(note);
+    }
+
+    Navigator.pop(context);
   }
 
   Widget _buildColorPicker() {
@@ -88,7 +100,7 @@ class _CreateNotePageState extends State<CreateNotePage> {
           final colorHex = _colors[index];
           final isSelected = _selectedColor == colorHex;
           final color = _getColorFromHex(colorHex);
-          
+
           return GestureDetector(
             onTap: () {
               setState(() {
@@ -102,16 +114,20 @@ class _CreateNotePageState extends State<CreateNotePage> {
               decoration: BoxDecoration(
                 color: color,
                 shape: BoxShape.circle,
-                border: isSelected ? Border.all(color: Colors.black87, width: 3) : Border.all(color: Colors.transparent, width: 3),
+                border: isSelected
+                    ? Border.all(color: Colors.black87, width: 3)
+                    : Border.all(color: Colors.transparent, width: 3),
                 boxShadow: [
                   BoxShadow(
-                    color: color.withOpacity(0.5),
+                    color: color.withValues(alpha: 0.5),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   )
                 ],
               ),
-              child: isSelected ? const Icon(Icons.check, color: Colors.black87) : null,
+              child: isSelected
+                  ? const Icon(Icons.check, color: Colors.black87)
+                  : null,
             ),
           );
         },

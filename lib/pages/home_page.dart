@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:provider/provider.dart';
 import '../models/note.dart';
+import '../services/note_service.dart';
 import 'create_page.dart';
 import 'detail_page.dart';
 
@@ -12,7 +14,15 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final List<Note> _notes = [];
+  String _query = '';
+  bool _showSearch = false;
+  final _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   Color _getColorFromHex(String hexColor) {
     hexColor = hexColor.replaceAll('#', '');
@@ -22,41 +32,84 @@ class _HomePageState extends State<HomePage> {
     return Color(int.parse(hexColor, radix: 16));
   }
 
-  void _navigateToCreatePage() async {
-    final newNote = await Navigator.push(
+  void _navigateToCreatePage() {
+    Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const CreateNotePage()),
     );
+  }
 
-    if (newNote != null && newNote is Note) {
-      setState(() {
-        _notes.add(newNote);
-      });
+  void _navigateToDetailPage(Note note) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DetailNotePage(note: note),
+      ),
+    );
+  }
+
+  String _sortLabel(SortOption option) {
+    switch (option) {
+      case SortOption.dateRecent:
+        return 'Récent d\'abord';
+      case SortOption.dateAncien:
+        return 'Ancien d\'abord';
+      case SortOption.titreAZ:
+        return 'Titre A→Z';
+      case SortOption.titreZA:
+        return 'Titre Z→A';
     }
   }
 
-  void _navigateToDetailPage(int index) async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => DetailNotePage(note: _notes[index]),
+  void _showSortMenu(BuildContext context, NoteService noteService) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
+      builder: (_) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(left: 8, bottom: 16),
+                child: Text(
+                  'Trier par',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+              ),
+              ...SortOption.values.map((opt) {
+                final isSelected = noteService.sortOption == opt;
+                return ListTile(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  leading: Icon(
+                    isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                    color: isSelected ? Colors.black87 : Colors.grey,
+                  ),
+                  title: Text(_sortLabel(opt)),
+                  onTap: () {
+                    noteService.setSortOption(opt);
+                    Navigator.pop(context);
+                  },
+                );
+              }),
+            ],
+          ),
+        );
+      },
     );
-
-    if (result == 'deleted') {
-      setState(() {
-        _notes.removeAt(index);
-      });
-    } else if (result is Note) {
-      // It was modified
-      setState(() {
-        _notes[index] = result;
-      });
-    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final noteService = context.watch<NoteService>();
+    final displayedNotes = _query.isEmpty
+        ? noteService.notes
+        : noteService.search(_query);
+
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -65,49 +118,137 @@ class _HomePageState extends State<HomePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 24),
+              // --- Header row ---
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Mes Notes',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Mes Notes',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
                         ),
-                      ],
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.search),
-                      onPressed: () {
-                        // Implement search functionality later
-                      },
-                    ),
-                  )
+                      ),
+                      // Live counter using Consumer for localized rebuild
+                      Consumer<NoteService>(
+                        builder: (context, svc, child) => Text(
+                          '${svc.count} note${svc.count != 1 ? 's' : ''}',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.black45,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      // Sort button
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.sort_rounded),
+                          onPressed: () => _showSortMenu(context, noteService),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      // Search button
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: IconButton(
+                          icon: Icon(
+                            _showSearch ? Icons.search_off : Icons.search,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _showSearch = !_showSearch;
+                              if (!_showSearch) {
+                                _query = '';
+                                _searchController.clear();
+                              }
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
+              // --- Search bar ---
+              AnimatedSize(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeInOut,
+                child: _showSearch
+                    ? Padding(
+                        padding: const EdgeInsets.only(top: 16),
+                        child: TextField(
+                          controller: _searchController,
+                          autofocus: true,
+                          decoration: InputDecoration(
+                            hintText: 'Rechercher une note...',
+                            prefixIcon: const Icon(Icons.search, color: Colors.black45),
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide.none,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              _query = value;
+                            });
+                          },
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              ),
               const SizedBox(height: 24),
+              // --- Notes Grid ---
               Expanded(
-                child: _notes.isEmpty
+                child: displayedNotes.isEmpty
                     ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.note_alt_outlined, size: 80, color: Colors.grey.shade300),
+                            Icon(
+                              _query.isNotEmpty
+                                  ? Icons.search_off
+                                  : Icons.note_alt_outlined,
+                              size: 80,
+                              color: Colors.grey.shade300,
+                            ),
                             const SizedBox(height: 16),
                             Text(
-                              'Aucune note pour le moment',
-                              style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+                              _query.isNotEmpty
+                                  ? 'Aucun résultat pour "$_query"'
+                                  : 'Aucune note pour le moment',
+                              style: TextStyle(
+                                  fontSize: 16, color: Colors.grey.shade600),
                             ),
                           ],
                         ),
@@ -116,13 +257,13 @@ class _HomePageState extends State<HomePage> {
                         crossAxisCount: 2,
                         mainAxisSpacing: 16,
                         crossAxisSpacing: 16,
-                        itemCount: _notes.length,
+                        itemCount: displayedNotes.length,
                         itemBuilder: (context, index) {
-                          final note = _notes[index];
+                          final note = displayedNotes[index];
                           final noteColor = _getColorFromHex(note.couleur);
 
                           return GestureDetector(
-                            onTap: () => _navigateToDetailPage(index),
+                            onTap: () => _navigateToDetailPage(note),
                             child: Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
@@ -130,7 +271,7 @@ class _HomePageState extends State<HomePage> {
                                 borderRadius: BorderRadius.circular(16),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: noteColor.withOpacity(0.4),
+                                    color: noteColor.withValues(alpha: 0.4),
                                     blurRadius: 8,
                                     offset: const Offset(0, 4),
                                   ),
