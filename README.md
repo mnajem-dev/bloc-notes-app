@@ -1,26 +1,53 @@
-# Application Bloc-Notes (Partie 1)
+# Application Bloc-Notes
 
-Une application Flutter de gestion de notes personnelles réalisée dans le cadre de travaux pratiques.
-Cette version correspond à la **Partie 1**, qui utilise `setState` et le système de navigation standard (`Navigator.push` / `Navigator.pop`) pour gérer l'état de l'application et les transitions entre les écrans.
+Une application Flutter complète de gestion de notes personnelles, réalisée dans le cadre de travaux pratiques.
 
-## Fonctionnalités (Partie 1)
+## Fonctionnalités
 
-*   **Affichage des notes :** Liste de toutes les notes sur la page d'accueil avec un aperçu du contenu, la date et la couleur associée.
-*   **Création de notes :** Formulaire permettant de définir un titre, un contenu et de choisir une couleur pour la note.
-*   **Modification de notes :** Édition du titre, du contenu et de la couleur d'une note existante.
-*   **Suppression de notes :** Suppression d'une note avec une boîte de dialogue de confirmation.
-*   **Détails de la note :** Affichage complet du contenu d'une note avec un en-tête coloré en fonction de la couleur de la note.
+- **Créer** des notes avec un titre, un contenu et une couleur personnalisée
+- **Lire** ses notes dans une grille masonry colorée
+- **Modifier** une note existante
+- **Supprimer** une note avec confirmation
+- **Rechercher** des notes en temps réel par titre ou contenu
+- **Trier** les notes par date (récent/ancien) ou par titre (A→Z / Z→A)
+- **Compteur** de notes en temps réel dans l'en-tête
+
+## Architecture
+
+Le projet est structuré en deux parties pédagogiques :
+
+### Partie 1 — setState & Navigation
+Gestion de l'état local avec `setState` et navigation entre les écrans via `Navigator.push` / `Navigator.pop`.
+
+### Partie 2 — Provider & Gestion d'État Global
+Refactorisation complète de l'architecture avec le package `provider` :
+- `NoteService` (ChangeNotifier) centralise toute la logique métier
+- Les pages consomment l'état via `context.watch<NoteService>()` et `context.read<NoteService>()`
+- Séparation claire entre interface et logique
 
 ## Structure du projet
 
-*   `lib/models/note.dart` : Modèle de données représentant une note.
-*   `lib/pages/home_page.dart` : Écran principal affichant la liste des notes.
-*   `lib/pages/create_page.dart` : Écran de création et d'édition d'une note.
-*   `lib/pages/detail_page.dart` : Écran affichant les détails d'une note et permettant sa modification ou sa suppression.
+```
+lib/
+├── models/
+│   └── note.dart            # Modèle de données Note
+├── pages/
+│   ├── home_page.dart       # Écran principal (liste, recherche, tri)
+│   ├── create_page.dart     # Formulaire de création / modification
+│   └── detail_page.dart     # Affichage détaillé d'une note
+├── services/
+│   └── note_service.dart    # Logique métier (ChangeNotifier)
+└── main.dart                # Point d'entrée & injection du Provider
+```
+
+## Technologies utilisées
+
+- [Flutter](https://flutter.dev/)
+- [provider](https://pub.dev/packages/provider) — gestion d'état global
+- [flutter_staggered_grid_view](https://pub.dev/packages/flutter_staggered_grid_view) — grille masonry
+- [google_fonts](https://pub.dev/packages/google_fonts) — typographie Poppins
 
 ## Exécution
-
-Assurez-vous d'avoir Flutter installé sur votre machine. Ensuite, pour lancer le projet, exécutez simplement la commande suivante dans le terminal :
 
 ```bash
 flutter run
