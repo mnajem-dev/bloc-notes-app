@@ -13,6 +13,7 @@ Une application Flutter complète de gestion de notes personnelles, réalisée d
 - **Compteur** de notes en temps réel dans l'en-tête
 - **Persistance locale** — les notes sont sauvegardées et restaurées entre les sessions via `shared_preferences`
 - **Synchronisation cloud** — les notes sont stockées et récupérées depuis **Firebase Cloud Firestore** via un service API dédié
+- **Détection de connexion** — indique visuellement l'état du réseau (en ligne/hors ligne) et empêche la synchronisation sans connexion
 
 ## Architecture
 
@@ -38,6 +39,7 @@ lib/
 │   └── note.dart            # Modèle de données Note (avec toJson / fromJson)
 ├── pages/
 │   ├── home_page.dart       # Écran principal (liste, recherche, tri)
+│   ├── api_notes_page.dart  # Écran de gestion de la synchronisation API
 │   ├── create_page.dart     # Formulaire de création / modification
 │   └── detail_page.dart     # Affichage détaillé d'une note
 ├── services/
@@ -53,6 +55,7 @@ lib/
 - [shared_preferences](https://pub.dev/packages/shared_preferences) — persistance locale des notes
 - [firebase_core](https://pub.dev/packages/firebase_core) — initialisation Firebase
 - [cloud_firestore](https://pub.dev/packages/cloud_firestore) — base de données cloud temps réel
+- [connectivity_plus](https://pub.dev/packages/connectivity_plus) — détection de l'état de la connexion réseau
 - [flutter_staggered_grid_view](https://pub.dev/packages/flutter_staggered_grid_view) — grille masonry
 - [google_fonts](https://pub.dev/packages/google_fonts) — typographie Poppins
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:provider/provider.dart';
@@ -19,8 +21,38 @@ class _HomePageState extends State<HomePage> {
   bool _showSearch = false;
   final _searchController = TextEditingController();
 
+  bool _isConnected = true;
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _initConnectivity();
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen(_updateConnectionStatus);
+  }
+
+  Future<void> _initConnectivity() async {
+    late List<ConnectivityResult> result;
+    try {
+      result = await Connectivity().checkConnectivity();
+    } catch (e) {
+      return;
+    }
+    if (!mounted) {
+      return Future.value(null);
+    }
+    _updateConnectionStatus(result);
+  }
+
+  void _updateConnectionStatus(List<ConnectivityResult> result) {
+    setState(() {
+      _isConnected = !result.contains(ConnectivityResult.none);
+    });
+  }
+
   @override
   void dispose() {
+    _connectivitySubscription?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -126,12 +158,22 @@ class _HomePageState extends State<HomePage> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Mes Notes',
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Row(
+                        children: [
+                          const Text(
+                            'Mes Notes',
+                            style: TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Icon(
+                            _isConnected ? Icons.wifi : Icons.wifi_off,
+                            color: _isConnected ? Colors.green : Colors.red,
+                            size: 20,
+                          ),
+                        ],
                       ),
                       // Live counter using Consumer for localized rebuild
                       Consumer<NoteService>(
@@ -164,12 +206,29 @@ class _HomePageState extends State<HomePage> {
                           icon: const Icon(Icons.cloud_rounded, color: Colors.white),
                           tooltip: 'Notes API',
                           onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const ApiNotesPage(),
-                              ),
-                            );
+                            if (_isConnected) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const ApiNotesPage(),
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Row(
+                                    children: [
+                                      const Icon(Icons.wifi_off, color: Colors.white),
+                                      const SizedBox(width: 12),
+                                      const Expanded(child: Text('Vous êtes hors ligne. Synchronisation impossible.')),
+                                    ],
+                                  ),
+                                  backgroundColor: Colors.red.shade600,
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                ),
+                              );
+                            }
                           },
                         ),
                       ),
