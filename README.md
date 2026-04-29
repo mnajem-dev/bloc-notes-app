@@ -11,7 +11,8 @@ Une application Flutter complète de gestion de notes personnelles, réalisée d
 - **Rechercher** des notes en temps réel par titre ou contenu
 - **Trier** les notes par date (récent/ancien) ou par titre (A→Z / Z→A)
 - **Compteur** de notes en temps réel dans l'en-tête
-- **Persistance locale** — les notes sont sauvegardées et restaurées entre les sessions
+- **Persistance locale** — les notes sont sauvegardées et restaurées entre les sessions via `shared_preferences`
+- **Synchronisation cloud** — les notes sont stockées et récupérées depuis **Firebase Cloud Firestore** via un service API dédié
 
 ## Architecture
 
@@ -22,10 +23,12 @@ Gestion de l'état local avec `setState` et navigation entre les écrans via `Na
 
 ### Partie 2 — Provider & Gestion d'État Global
 Refactorisation complète de l'architecture avec le package `provider` :
-- `NoteService` (ChangeNotifier) centralise toute la logique métier
+- `NoteService` (ChangeNotifier) centralise toute la logique métier et la persistance locale
+- `ApiService` encapsule toutes les opérations Firestore (GET, POST, DELETE) dans une couche de service séparée
 - Les pages consomment l'état via `context.watch<NoteService>()` et `context.read<NoteService>()`
-- Séparation claire entre interface et logique
-- **Persistance des données** : les notes sont sérialisées en JSON et stockées localement via `shared_preferences`, elles survivent aux redémarrages de l'application
+- Séparation claire entre interface, logique métier et accès aux données
+- **Firebase Core** initialisé au démarrage de l'application
+- **Cloud Firestore** utilisé comme backend de données cloud
 
 ## Structure du projet
 
@@ -38,8 +41,9 @@ lib/
 │   ├── create_page.dart     # Formulaire de création / modification
 │   └── detail_page.dart     # Affichage détaillé d'une note
 ├── services/
-│   └── note_service.dart    # Logique métier + persistance (ChangeNotifier)
-└── main.dart                # Point d'entrée & injection du Provider
+│   ├── note_service.dart    # Logique métier + persistance locale (ChangeNotifier)
+│   └── api_service.dart     # Accès aux données Firestore (GET, POST, DELETE)
+└── main.dart                # Point d'entrée, initialisation Firebase & injection du Provider
 ```
 
 ## Technologies utilisées
@@ -47,8 +51,16 @@ lib/
 - [Flutter](https://flutter.dev/)
 - [provider](https://pub.dev/packages/provider) — gestion d'état global
 - [shared_preferences](https://pub.dev/packages/shared_preferences) — persistance locale des notes
+- [firebase_core](https://pub.dev/packages/firebase_core) — initialisation Firebase
+- [cloud_firestore](https://pub.dev/packages/cloud_firestore) — base de données cloud temps réel
 - [flutter_staggered_grid_view](https://pub.dev/packages/flutter_staggered_grid_view) — grille masonry
 - [google_fonts](https://pub.dev/packages/google_fonts) — typographie Poppins
+
+## Prérequis
+
+- Flutter SDK installé
+- Un projet Firebase configuré avec un fichier `google-services.json` placé dans `android/app/`
+- Cloud Firestore activé dans la console Firebase
 
 ## Exécution
 

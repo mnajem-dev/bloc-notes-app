@@ -3,6 +3,7 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:provider/provider.dart';
 import '../models/note.dart';
 import '../services/note_service.dart';
+import 'api_notes_page.dart';
 import 'create_page.dart';
 import 'detail_page.dart';
 
@@ -146,6 +147,33 @@ class _HomePageState extends State<HomePage> {
                   ),
                   Row(
                     children: [
+                      // API button
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black87,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.15),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.cloud_rounded, color: Colors.white),
+                          tooltip: 'Notes API',
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const ApiNotesPage(),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 10),
                       // Sort button
                       Container(
                         decoration: BoxDecoration(

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "881267005335",
+    "project_id": "bloc-notes-cbe23",
+    "storage_bucket": "bloc-notes-cbe23.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:881267005335:android:bf9a935f9a0aa657ed16d2",
+        "android_client_info": {
+          "package_name": "com.mouhamed.bloc_notes"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDKZKJCY6N2ET7DDFOAk1WlS-Zk1eeen6c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
