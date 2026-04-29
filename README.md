@@ -11,6 +11,7 @@ Une application Flutter complète de gestion de notes personnelles, réalisée d
 - **Rechercher** des notes en temps réel par titre ou contenu
 - **Trier** les notes par date (récent/ancien) ou par titre (A→Z / Z→A)
 - **Compteur** de notes en temps réel dans l'en-tête
+- **Persistance locale** — les notes sont sauvegardées et restaurées entre les sessions
 
 ## Architecture
 
@@ -24,19 +25,20 @@ Refactorisation complète de l'architecture avec le package `provider` :
 - `NoteService` (ChangeNotifier) centralise toute la logique métier
 - Les pages consomment l'état via `context.watch<NoteService>()` et `context.read<NoteService>()`
 - Séparation claire entre interface et logique
+- **Persistance des données** : les notes sont sérialisées en JSON et stockées localement via `shared_preferences`, elles survivent aux redémarrages de l'application
 
 ## Structure du projet
 
 ```
 lib/
 ├── models/
-│   └── note.dart            # Modèle de données Note
+│   └── note.dart            # Modèle de données Note (avec toJson / fromJson)
 ├── pages/
 │   ├── home_page.dart       # Écran principal (liste, recherche, tri)
 │   ├── create_page.dart     # Formulaire de création / modification
 │   └── detail_page.dart     # Affichage détaillé d'une note
 ├── services/
-│   └── note_service.dart    # Logique métier (ChangeNotifier)
+│   └── note_service.dart    # Logique métier + persistance (ChangeNotifier)
 └── main.dart                # Point d'entrée & injection du Provider
 ```
 
@@ -44,6 +46,7 @@ lib/
 
 - [Flutter](https://flutter.dev/)
 - [provider](https://pub.dev/packages/provider) — gestion d'état global
+- [shared_preferences](https://pub.dev/packages/shared_preferences) — persistance locale des notes
 - [flutter_staggered_grid_view](https://pub.dev/packages/flutter_staggered_grid_view) — grille masonry
 - [google_fonts](https://pub.dev/packages/google_fonts) — typographie Poppins
 

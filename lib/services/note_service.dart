@@ -1,11 +1,32 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/note.dart';
 
 enum SortOption { dateRecent, dateAncien, titreAZ, titreZA }
 
 class NoteService extends ChangeNotifier {
-  final List<Note> _notes = [];
+  final SharedPreferences _prefs;
+  List<Note> _notes = [];
   SortOption _sortOption = SortOption.dateRecent;
+
+  NoteService(this._prefs) {
+    _loadNotes();
+  }
+
+  void _loadNotes() {
+    final notesString = _prefs.getString('notes');
+    if (notesString != null) {
+      final List<dynamic> decoded = jsonDecode(notesString);
+      _notes = decoded.map((item) => Note.fromJson(item)).toList();
+      notifyListeners();
+    }
+  }
+
+  void _saveNotes() {
+    final encoded = jsonEncode(_notes.map((n) => n.toJson()).toList());
+    _prefs.setString('notes', encoded);
+  }
 
   SortOption get sortOption => _sortOption;
 
@@ -32,6 +53,7 @@ class NoteService extends ChangeNotifier {
 
   void addNote(Note note) {
     _notes.add(note);
+    _saveNotes();
     notifyListeners();
   }
 
@@ -39,12 +61,14 @@ class NoteService extends ChangeNotifier {
     final index = _notes.indexWhere((n) => n.id == note.id);
     if (index != -1) {
       _notes[index] = note;
+      _saveNotes();
       notifyListeners();
     }
   }
 
   void deleteNote(String id) {
     _notes.removeWhere((n) => n.id == id);
+    _saveNotes();
     notifyListeners();
   }
 
