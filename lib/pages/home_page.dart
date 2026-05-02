@@ -155,38 +155,44 @@ class _HomePageState extends State<HomePage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Text(
-                            'Mes Notes',
-                            style: TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Flexible(
+                              child: Text(
+                                'Mes Notes',
+                                style: TextStyle(
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Icon(
+                              _isConnected ? Icons.wifi : Icons.wifi_off,
+                              color: _isConnected ? Colors.green : Colors.red,
+                              size: 20,
+                            ),
+                          ],
+                        ),
+                        // Live counter using Consumer for localized rebuild
+                        Consumer<NoteService>(
+                          builder: (context, svc, child) => Text(
+                            '${svc.count} note${svc.count != 1 ? 's' : ''}',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.black45,
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          Icon(
-                            _isConnected ? Icons.wifi : Icons.wifi_off,
-                            color: _isConnected ? Colors.green : Colors.red,
-                            size: 20,
-                          ),
-                        ],
-                      ),
-                      // Live counter using Consumer for localized rebuild
-                      Consumer<NoteService>(
-                        builder: (context, svc, child) => Text(
-                          '${svc.count} note${svc.count != 1 ? 's' : ''}',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.black45,
-                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
+                  const SizedBox(width: 8),
                   Row(
                     children: [
                       // API button
